@@ -1,23 +1,334 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Personal Page</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-  <!--<script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script> !-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harsh Hemani | Computing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg: #f8fafc;
+            --fg: #0f172a;
+            --accent: #06b6d4;
+            --accent-glow: rgba(6, 182, 212, 0.1);
+            --grid: rgba(15, 23, 42, 0.03);
+            --transition-fluid: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dark {
+            --bg: #020617;
+            --fg: #f1f5f9;
+            --accent: #22d3ee;
+            --accent-glow: rgba(34, 211, 238, 0.15);
+            --grid: rgba(241, 245, 249, 0.03);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+            overflow-x: hidden;
+            transition: background-color 0.6s var(--transition-fluid);
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* --- PERFORMANCE LAYERS --- */
+        .blueprint {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .blueprint::after {
+            content: "";
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--accent-glow) 0%, transparent 60%);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* --- HERO: GPU ACCELERATED PARALLAX --- */
+        .hero-title {
+            font-size: clamp(4rem, 18vw, 15rem);
+            line-height: 0.8;
+            letter-spacing: -0.06em;
+            font-weight: 950;
+            text-transform: uppercase;
+            will-change: transform;
+        }
+
+        .hero-ghost {
+            position: absolute;
+            top: 0; left: 0;
+            color: var(--accent);
+            opacity: 0.15;
+            filter: blur(15px);
+            pointer-events: none;
+            z-index: -1;
+            will-change: transform;
+        }
+
+        /* --- ARTICLES: ZERO REFLOW ARCHITECTURE --- */
+        .article-row {
+            position: relative;
+            padding: 4.5rem 0;
+            border-bottom: 1px solid var(--grid);
+            cursor: pointer;
+            /* Remove all layout-triggering transitions */
+            background: transparent;
+        }
+
+        /* Instead of padding, we move the interior container with transform */
+        .row-container {
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 100px 1fr 180px;
+            align-items: center;
+            will-change: transform;
+            transition: transform 0.6s var(--transition-fluid), color 0.4s ease;
+        }
+
+        .article-row:hover .row-container {
+            transform: translate3d(40px, 0, 0);
+            color: var(--bg);
+        }
+
+        /* GPU wipe using scale instead of width */
+        .row-wipe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--accent);
+            z-index: 0;
+            transform: scaleX(0);
+            transform-origin: left;
+            will-change: transform;
+            transition: transform 0.6s var(--transition-fluid);
+        }
+
+        .article-row:hover .row-wipe {
+            transform: scaleX(1);
+        }
+
+        /* Force title to monospaced during scramble to prevent width jitter */
+        .title-target {
+            display: inline-block;
+            transition: font-family 0.2s ease;
+        }
+        .article-row:hover .title-target {
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
+        }
+
+        /* --- UTILITIES --- */
+        .scanline {
+            position: fixed; top: 0; left: 0; width: 100%; height: 1px;
+            background: var(--accent); opacity: 0.2; z-index: 50;
+            pointer-events: none; animation: scan 15s linear infinite;
+            will-change: transform;
+        }
+
+        @keyframes scan {
+            from { transform: translate3d(0, -100px, 0); }
+            to { transform: translate3d(0, 100vh, 0); }
+        }
+
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.04; pointer-events: none; z-index: 100;
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <h1>About me</h1>
-    <p>My name is Harsh Hemani.<br>
-       I have been working as a Software Developer for the last three and a half years.<br>
-       I have developed several applications in the fields of High performance computing, Molecular Dynamics,
-       Image processing and Speech processing using technologies such as MPI, Deep learning, and Graphical models.<br>
-    </p>
-    <h2>Contact:</h2><small>harshscience[at]gmail[dot]com</small>
-  </div>
+<body class="antialiased selection:bg-[var(--accent)] selection:text-[var(--bg)]">
+    <div class="blueprint"></div>
+    <div class="grain"></div>
+    <div class="scanline"></div>
+
+    <div class="container mx-auto px-6 py-12 relative z-10">
+        <!-- TOP NAV -->
+        <nav class="flex justify-between items-center border-b-2 border-current pb-8 mb-24">
+            <div class="mono text-[10px] font-bold tracking-[0.5em] uppercase opacity-60">
+                @harshhemani 
+            </div>
+            <button id="themeToggle" class="mono text-[10px] font-bold px-8 py-2 border-2 border-current hover:bg-current hover:text-[var(--bg)] transition-all uppercase tracking-widest">
+                DarkMode.Toggle
+            </button>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <header class="relative mb-48">
+            <div class="relative inline-block">
+                <h1 class="hero-title relative z-10" id="mainTitle">
+                    Harsh<br>Hemani
+                </h1>
+                <h1 class="hero-title hero-ghost" id="ghostTitle">
+                    Harsh<br>Hemani
+                </h1>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 mt-20 border-t-2 border-current pt-12">
+                <p class="text-3xl md:text-5xl font-black leading-[0.95] max-w-2xl tracking-tighter uppercase">
+                    Computing
+                </p>
+                <div class="mono text-[11px] space-y-4 opacity-70 uppercase tracking-widest">
+                    <p class="flex justify-between border-b border-current pb-2"><span>[01] Scientific</span> <span>Research</span></p>
+                    <p class="flex justify-between border-b border-current pb-2"><span>[02] Machine</span> <span>Learning</span></p>
+                    <p class="flex justify-between border-b border-current pb-2"><span>[03] Science</span> & <span>Computing</span></p>
+                    <div class="flex items-center gap-3 pt-4 text-[var(--accent)] font-bold">
+                        <span class="w-2 h-2 rounded-full bg-current animate-pulse"></span>
+                        Status: Ready
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ARTICLES FEED -->
+        <section class="mb-64">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="mono text-[10px] font-bold tracking-[0.6em] uppercase opacity-40">Observation_Logs</h2>
+                <span class="mono text-[10px] opacity-30">Scan_Frequency: Weekly</span>
+            </div>
+
+            <div class="article-feed border-t-2 border-current">
+                <!-- ROW 1 -->
+                <div class="article-row" data-title="Differential Manifolds">
+                    <div class="row-wipe"></div>
+                    <div class="row-container">
+                        <span class="mono text-[10px] opacity-50">#01</span>
+                        <h3 class="text-4xl md:text-8xl font-black uppercase tracking-tighter title-target">Under Construction</h3>
+                        <span class="mono text-[10px] text-right">Today</span>
+                    </div>
+                </div>
+        </section>
+
+        <!-- SOCIALS -->
+        <section class="mb-48">
+            <div class="mono text-[10px] font-bold tracking-[0.6em] mb-16 uppercase opacity-40">Communication_Uplink</div>
+            <div class="flex flex-wrap gap-x-24 gap-y-12">
+                <a href="https://github.com/harshhemani" class="group relative overflow-hidden text-3xl md:text-6xl font-black tracking-tighter uppercase transition-colors hover:text-[var(--accent)]">
+                    <span class="relative z-10">GITHUB</span>
+                    <span class="absolute bottom-0 left-0 h-1 w-0 bg-current transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="https://scholar.google.com/citations?user=x1NshtoAAAAJ&hl=en" class="group relative overflow-hidden text-3xl md:text-6xl font-black tracking-tighter uppercase transition-colors hover:text-[var(--accent)]">
+                    <span class="relative z-10">SCHOLAR</span>
+                    <span class="absolute bottom-0 left-0 h-1 w-0 bg-current transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="https://www.linkedin.com/in/harsh-harsh-h/" class="group relative overflow-hidden text-3xl md:text-6xl font-black tracking-tighter uppercase transition-colors hover:text-[var(--accent)]">
+                    <span class="relative z-10">LINKEDIN</span>
+                    <span class="absolute bottom-0 left-0 h-1 w-0 bg-current transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="border-t-2 border-current pt-16 flex flex-col md:flex-row justify-between gap-12 opacity-30">
+            <div class="mono text-[11px] tracking-[0.2em] font-bold">
+                ENGR_NODE: VIZAG_HQ // IN_2026
+            </div>
+            <div class="mono text-[11px] tracking-[0.2em] font-bold">
+                HARSH_HEMANI &copy; ALL_SYSTEMS_GO
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const mainTitle = document.getElementById('mainTitle');
+        const ghostTitle = document.getElementById('ghostTitle');
+
+        // --- THEME ---
+        const setDark = (isDark) => {
+            body.classList.toggle('dark', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
+
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setDark(true);
+        }
+
+        themeToggle.addEventListener('click', () => setDark(!body.classList.contains('dark')));
+
+        // --- DAMPED FLOATING PARALLAX (HIGH PERFORMANCE) ---
+        let mouseX = 0, mouseY = 0;
+        let curX = 0, curY = 0;
+        let ghostCurX = 0, ghostCurY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            // Highly damped input values
+            mouseX = (e.clientX - window.innerWidth / 2) / 80;
+            mouseY = (e.clientY - window.innerHeight / 2) / 80;
+            
+            body.style.setProperty('--mouse-x', `${e.clientX}px`);
+            body.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+
+        function animate() {
+            // Ultra-smooth lerp (linear interpolation)
+            curX += (mouseX - curX) * 0.05;
+            curY += (mouseY - curY) * 0.05;
+            
+            ghostCurX += (mouseX * -1.5 - ghostCurX) * 0.03;
+            ghostCurY += (mouseY * -1.5 - ghostCurY) * 0.03;
+
+            mainTitle.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+            ghostTitle.style.transform = `translate3d(${ghostCurX}px, ${ghostCurY}px, 0)`;
+            
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- STABLE DECIPHER EFFECT ---
+        const rows = document.querySelectorAll('.article-row');
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+
+        rows.forEach(row => {
+            const target = row.querySelector('.title-target');
+            const originalText = row.getAttribute('data-title');
+            let interval = null;
+            let active = false;
+
+            row.addEventListener('mouseenter', () => {
+                if (active) return;
+                active = true;
+                let iteration = 0;
+                clearInterval(interval);
+                
+                interval = setInterval(() => {
+                    target.innerText = originalText
+                        .split("")
+                        .map((char, index) => {
+                            if (index < iteration) return originalText[index];
+                            // Replace characters with random ones
+                            return chars[Math.floor(Math.random() * chars.length)];
+                        })
+                        .join("");
+
+                    if (iteration >= originalText.length) {
+                        clearInterval(interval);
+                        active = false;
+                    }
+                    iteration += 1 / 3;
+                }, 40);
+            });
+
+            row.addEventListener('mouseleave', () => {
+                clearInterval(interval);
+                target.innerText = originalText;
+                active = false;
+            });
+        });
+    </script>
 </body>
 </html>
