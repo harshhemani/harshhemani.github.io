@@ -204,6 +204,32 @@
             </div>
         </section>
 
+        <section class="mb-48 reveal" style="animation-delay: 0.5s;">
+            <div class="flex items-baseline justify-between mb-8 border-b-2 border-current pb-4">
+                <h2 class="font-mono text-xs font-bold uppercase tracking-[0.4em]">Research Archive</h2>
+            </div>
+
+            <div class="dossier-card group p-8 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-12 cursor-pointer">
+                <div class="space-y-4">
+                    <div class="font-mono text-[10px] tracking-widest opacity-50 uppercase">Reference: H.HEMANI.2018.09</div>
+                    <h3 class="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none">
+                        Accelerating Deep Neural Network Training (Part 1)
+                    </h3>
+                </div>
+                <div class="text-right font-mono max-w-sm">
+                    <div class="text-xs font-bold mb-1">[ COLAB NOTEBOOK ]</div>
+                    <div class="text-[10px] opacity-50 leading-relaxed">
+                        This notebook investigates the challenges of accelerating deep learning through parallel training and large batch sizes. While distributing mini-batches across machines speeds up computation, it increases the effective batch size, which often degrades model convergence and final accuracy.
+                    </div>
+                    <div class="text-[10px] opacity-50 mt-2">The notebook demonstrates that while increasing batch sizes (from 32 up to 4096) significantly reduces training time per epoch, it leads to a clear drop in test-set accuracy on the MNIST dataset. The notebook found that scaling the learning rate by the square root of the batch size ratio (batchsizenew​/batchsizeold​​) offered the best stability and performance for this specific benchmark.</div>
+                </div>
+                <!-- Card Arrow -->
+                <div class="absolute top-8 right-8 text-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+                    &rarr;
+                </div>
+            </div>
+        </section>
+
         <!-- FOOTER LINKS -->
         <footer class="grid grid-cols-1 md:grid-cols-2 gap-24 reveal" style="animation-delay: 0.7s;">
             <div>
