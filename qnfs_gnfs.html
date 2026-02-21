@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sieve Algorithms — A Visual Walkthrough</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,300&family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a40;
+    --accent: #f0c040;
+    --accent2: #40c0f0;
+    --accent3: #f04070;
+    --text: #e8e8f0;
+    --muted: #7878a0;
+    --code-bg: #0d0d18;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID NOISE BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(240,192,64,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(240,192,64,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(240,192,64,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero h1 span {
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    max-width: 580px;
+    margin: 0 auto 3rem;
+    color: var(--muted);
+    font-size: 1.05rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .toc-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .toc-pills a {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    text-decoration: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+
+  .toc-pills a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(240,192,64,0.06);
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+
+  .section + .section {
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 2.5rem 0 0.8rem;
+    color: var(--accent2);
+  }
+
+  .section p {
+    color: #c0c0d8;
+    margin-bottom: 1.2rem;
+    font-size: 1rem;
+  }
+
+  /* ── CALLOUT BOX ── */
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 1.2rem 1.5rem;
+    margin: 2rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .callout.blue { border-color: var(--accent2); }
+  .callout.red  { border-color: var(--accent3); }
+
+  .callout-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .callout.blue .callout-title { color: var(--accent2); }
+  .callout.red  .callout-title { color: var(--accent3); }
+
+  .callout p { margin: 0; font-size: 0.95rem; }
+
+  /* ── MATH DISPLAY ── */
+  .math-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.8;
+  }
+
+  .math-block .comment {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── STEP CARDS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 1.2rem;
+    align-items: start;
+    padding: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .step:hover {
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .step-num {
+    width: 3rem; height: 3rem;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(240,192,64,0.1);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .step-body h4 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+  }
+
+  .step-body p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .compare-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .compare-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: #c0c0d8;
+    vertical-align: top;
+  }
+
+  .compare-table tr:hover td {
+    background: var(--surface2);
+  }
+
+  .compare-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── INTERACTIVE DEMO ── */
+  .demo-box {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .demo-box label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .demo-row {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .demo-box input[type="number"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+    width: 160px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .demo-box input[type="number"]:focus {
+    border-color: var(--accent);
+  }
+
+  .demo-box button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .demo-box button:hover { opacity: 0.85; }
+
+  .demo-output {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent2);
+    line-height: 1.9;
+    min-height: 2rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .demo-output .step-line { color: var(--muted); }
+  .demo-output .highlight { color: var(--accent); font-weight: 600; }
+  .demo-output .success   { color: #60e060; }
+  .demo-output .error     { color: var(--accent3); }
+
+  /* ── SIEVE VISUAL ── */
+  .sieve-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .sieve-cell {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .sieve-cell.smooth {
+    background: rgba(64,192,240,0.15);
+    border-color: rgba(64,192,240,0.5);
+    color: var(--accent2);
+  }
+
+  .sieve-cell.selected {
+    background: rgba(240,192,64,0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.08);
+  }
+
+  .sieve-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+    align-items: center;
+  }
+
+  .sieve-controls button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .sieve-controls button:hover, .sieve-controls button.active {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(64,192,240,0.08);
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+
+  /* ── COMPLEXITY CHART ── */
+  .complexity-chart {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .complexity-chart canvas {
+    width: 100%;
+    display: block;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .step { grid-template-columns: 2.4rem 1fr; }
+    .sieve-cell { width: 36px; height: 36px; font-size: 0.65rem; }
+    .compare-table { font-size: 0.8rem; }
+    .compare-table th, .compare-table td { padding: 0.6rem 0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <p class="hero-eyebrow">Integer Factorization — A Deep Dive</p>
+  <h1>Sieving for<br><span>Prime Factors</span></h1>
+  <p class="hero-sub">An interactive walkthrough of the Quadratic Sieve and General Number Field Sieve — the two most powerful classical factoring algorithms ever devised.</p>
+  <div class="toc-pills">
+    <a href="#background">Background</a>
+    <a href="#qs-intro">Quadratic Sieve</a>
+    <a href="#qs-steps">QS Walkthrough</a>
+    <a href="#demo">Live Demo</a>
+    <a href="#gnfs-intro">Number Field Sieve</a>
+    <a href="#gnfs-steps">GNFS Walkthrough</a>
+    <a href="#comparison">Comparison</a>
+    <a href="#applications">Applications</a>
+  </div>
+</section>
+
+<!-- ══ BACKGROUND ════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="background">
+  <p class="section-label">§ 0 — Context</p>
+  <h2>Why Factoring Matters</h2>
+  <p>Integer factorization — decomposing a composite number into its prime factors — sits at the heart of modern cryptography. RSA encryption, which secures the majority of internet traffic, derives its security entirely from the assumption that factoring large integers (1024–4096 bits) is computationally infeasible.</p>
+  <p>Since Fermat (1643), mathematicians have searched for faster methods. The Quadratic Sieve (QS) and General Number Field Sieve (GNFS) are the pinnacle of this effort. GNFS holds the record: it factored RSA-768 (232 decimal digits) in 2009 using the equivalent of ~1,500 years of single-core CPU time.</p>
+
+  <div class="callout">
+    <p class="callout-title">Core Idea</p>
+    <p>Both algorithms are <em>congruence of squares</em> methods. If we can find integers <em>x</em> and <em>y</em> such that x² ≡ y² (mod N) but x ≢ ±y (mod N), then gcd(x − y, N) reveals a non-trivial factor of N.</p>
+  </div>
+
+  <div class="math-block"><span class="comment">// Fermat's factorization identity</span>
+N = a² − b²  =  (a + b)(a − b)
+
+<span class="comment">// Congruence of squares formulation</span>
+x² ≡ y²  (mod N)
+⟹  N | (x² − y²) = (x−y)(x+y)
+⟹  gcd(x−y, N)  is likely a factor of N</div>
+
+  <p>The challenge is <em>finding</em> such x and y efficiently. Both sieve algorithms solve this by searching for many numbers whose squares are <strong>smooth</strong> (have only small prime factors), then combining them via linear algebra.</p>
+</section>
+
+<!-- ══ QS INTRO ═══════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="qs-intro">
+  <p class="section-label">§ 1 — Quadratic Sieve</p>
+  <h2>The Quadratic Sieve</h2>
+  <p>Invented by Carl Pomerance in 1981, the Quadratic Sieve was the world's fastest factoring algorithm for large numbers until GNFS surpassed it in the early 1990s. It remains the fastest algorithm for numbers up to ~100 decimal digits and is elegant in its simplicity.</p>
+
+  <div class="callout blue">
+    <p class="callout-title">Complexity</p>
+    <p>L<sub>N</sub>[1/2, 1] = exp((1+o(1)) √(ln N · ln ln N)) — sub-exponential, but super-polynomial.</p>
+  </div>
+
+  <h3>The Central Polynomial</h3>
+  <p>QS evaluates the polynomial <strong>Q(x) = (x + ⌊√N⌋)² − N</strong>. Because x is near √N, Q(x) is much smaller than N, making its values easier to factor. Crucially, Q(x) ≡ (x + ⌊√N⌋)² (mod N), so any factorization of Q(x) gives us a perfect square mod N.</p>
+
+  <div class="math-block">m = ⌊√N⌋
+Q(x) = (m + x)² − N
+
+<span class="comment">// Q(x) is automatically ≡ (m+x)² (mod N)</span>
+<span class="comment">// So Q(x) smooth ⟹ (m+x)² = smooth product (mod N)</span>
+
+<span class="comment">// Example: N = 15347</span>
+m = ⌊√15347⌋ = 123
+Q(1) = 124² − 15347 = 15376 − 15347 = 29     <span class="comment">← smooth? 29 is prime ✓</span>
+Q(2) = 125² − 15347 = 15625 − 15347 = 278    <span class="comment">← 2 × 139</span>
+Q(5) = 128² − 15347 = 16384 − 15347 = 1037   <span class="comment">← 17 × 61</span></div>
+</section>
+
+<!-- ══ QS STEPS ════════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="qs-steps">
+  <p class="section-label">§ 2 — QS Algorithm Steps</p>
+  <h2>Walking Through QS</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h4>Choose a Factor Base</h4>
+        <p>Select a smoothness bound B and collect all primes p ≤ B for which N is a quadratic residue mod p (i.e., the Legendre symbol (N/p) = 1). These are the only primes that can divide Q(x).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h4>Sieve for B-smooth Values</h4>
+        <p>For each prime p in the factor base, find the values of x where p | Q(x) — there are exactly two residues mod p. Then "sieve" by subtracting log(p) from positions x, x+p, x+2p, … Positions with near-zero accumulated value are smooth candidates.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h4>Factor Smooth Values Completely</h4>
+        <p>Trial-divide the smooth candidates by the factor base to obtain their full factorization. Record each as a vector over GF(2) of prime exponent parities. We need slightly more than |factor base| such vectors.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h4>Gaussian Elimination over GF(2)</h4>
+        <p>Find a subset of the smooth values whose product has all even exponents — i.e., a linear dependency in GF(2). This gives a relation x² ≡ y² (mod N).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <h4>Compute the GCD</h4>
+        <p>With x and y in hand, compute gcd(x − y, N) and gcd(x + y, N). With high probability (≥ 50% per relation), one of these is a non-trivial factor of N.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIEVE VISUAL ── -->
+  <h3>Interactive Sieve Visualization</h3>
+  <p>Below are values of Q(x) = (⌊√899⌋ + x)² − 899 for x = 0..35 (N = 899 = 29 × 31). Click a prime to highlight which positions it divides.</p>
+
+  <div class="demo-box">
+    <div class="sieve-controls" id="sieve-controls"></div>
+    <div class="sieve-grid" id="sieve-grid"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(64,192,240,0.3); border-color:rgba(64,192,240,0.6)"></div> B-smooth</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(240,192,64,0.2); border-color:var(--accent)"></div> Divisible by selected prime</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LIVE DEMO ═══════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="demo">
+  <p class="section-label">§ 3 — Interactive Demo</p>
+  <h2>Try It: Factor a Number</h2>
+  <p>Enter a semi-prime (product of two primes, ideally between 100 and 10,000,000) to see a simplified Quadratic Sieve in action. The demo traces the algorithm's key steps.</p>
+
+  <div class="demo-box">
+    <label>Number to factor (N)</label>
+    <div class="demo-row">
+      <input type="number" id="demo-input" value="15347" min="4" max="9999999">
+      <button onclick="runDemo()">FACTOR →</button>
+      <button onclick="setRandom()" style="background:var(--surface2); color:var(--muted); border:1px solid var(--border);">RANDOM</button>
+    </div>
+    <div class="demo-output" id="demo-output">Enter a number and click FACTOR →</div>
+  </div>
+</section>
+
+<!-- ══ GNFS INTRO ══════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="gnfs-intro">
+  <p class="section-label">§ 4 — Number Field Sieve</p>
+  <h2>The General Number Field Sieve</h2>
+  <p>The GNFS (developed 1988–1993 by Lenstra, Lenstra, Manasse, Pollard, and others) is the most efficient known classical algorithm for factoring integers over ~100 digits. It achieves a better asymptotic complexity than QS by sieving in two <em>number fields</em> simultaneously.</p>
+
+  <div class="callout blue">
+    <p class="callout-title">Complexity</p>
+    <p>L<sub>N</sub>[1/3, (64/9)^{1/3}] = exp((1.923+o(1)) (ln N)^{1/3} (ln ln N)^{2/3}) — dramatically faster than QS for large N.</p>
+  </div>
+
+  <h3>The Key Insight: Two Rings, One Congruence</h3>
+  <p>GNFS lifts the problem into two algebraic number fields. Instead of one polynomial, it uses an irreducible polynomial f(x) of degree d, finding an integer m such that f(m) ≡ 0 (mod N). This defines two ring homomorphisms:</p>
+
+  <div class="math-block"><span class="comment">// Choose d ≈ (ln N / ln ln N)^{1/3}, polynomial f(x) of degree d</span>
+<span class="comment">// Find m ≈ N^{1/d} such that f(m) ≡ 0 (mod N)</span>
+
+Ring 1: ℤ (the integers)
+Ring 2: ℤ[α] where α is a root of f  (algebraic number field)
+
+<span class="comment">// Homomorphisms connecting them:</span>
+φ₁: ℤ[x]/(f(x)) → ℤ/Nℤ    via x ↦ m
+φ₂: ℤ[x]/(f(x)) → ℤ[α]     via x ↦ α
+
+<span class="comment">// Sieve pairs (a,b) such that:</span>
+(a + bm)   is smooth in ℤ           (rational side)
+(a + bα)   has smooth norm in ℤ[α]  (algebraic side)</div>
+
+  <h3>Why Is GNFS Faster?</h3>
+  <p>In QS, the values being sieved are of size ~N^{1/2}. In GNFS, by working in a number field, the values on both sides have size roughly N^{1/d} — exponentially smaller for large N. Smaller values are easier to smooth, so far fewer candidates need to be tested, and the factor base can be smaller relative to N.</p>
+
+  <div class="callout red">
+    <p class="callout-title">Practical Complexity</p>
+    <p>For a 512-bit (155-digit) number, GNFS is ~1,000× faster than QS. For 1024-bit (309-digit) numbers, the gap is astronomical. This is why modern RSA uses keys of 2048+ bits.</p>
+  </div>
+</section>
+
+<!-- ══ GNFS STEPS ══════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="gnfs-steps">
+  <p class="section-label">§ 5 — GNFS Algorithm Steps</p>
+  <h2>Walking Through GNFS</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h4>Polynomial Selection</h4>
+        <p>Choose degree d ≈ (3 ln N / ln ln N)^{1/3} and find a monic irreducible polynomial f(x) and integer m ≈ N^{1/d} such that f(m) ≡ 0 (mod N). Good polynomials have small, balanced coefficients — this step critically affects sieving efficiency and is an art in itself.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h4>Two-Sided Sieving</h4>
+        <p>For each pair (a, b) with gcd(a,b)=1, evaluate both a+bm (rational) and the algebraic norm Norm(a+bα). Record pairs where both values are B-smooth. Sieving is typically done in a 2D region using a lattice sieve — far more efficient than line-by-line.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h4>Factor Base & Character Map</h4>
+        <p>The rational factor base is primes p ≤ B. The algebraic factor base consists of pairs (p, r) where f(r) ≡ 0 (mod p). Additional "quadratic characters" are needed to handle the ambiguity of square roots in the number field.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h4>Linear Algebra over GF(2)</h4>
+        <p>Represent each smooth pair as a sparse vector over GF(2) encoding exponent parities across both factor bases plus character values. Use Block Lanczos or Wiedemann algorithm to find the kernel — far more efficient than Gaussian elimination for the enormous matrices involved (millions of rows/columns).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <h4>Square Root in ℤ[α]</h4>
+        <p>The most mathematically subtle step: compute the square root of a product of algebraic integers in ℤ[α]. This is done via Couveignes–Montgomery method, working modulo several primes and using CRT to reconstruct the answer. Maps back to an integer mod N via φ₁.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">06</div>
+      <div class="step-body">
+        <h4>GCD and Factor Recovery</h4>
+        <p>As in QS: compute gcd(x − y, N). Repeat with different linear algebra solutions if the first attempt gives a trivial factor. Each dependency gives a ≥50% chance of a non-trivial factor.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p class="callout-title">The RSA-768 Factorization (2009)</p>
+    <p>RSA-768 (232 digits) was factored using GNFS. Sieving ran for 2 years on hundreds of machines. The final matrix had 192 million rows and columns. The result: two 116-digit primes, proving RSA-768 insecure.</p>
+  </div>
+</section>
+
+<!-- ══ COMPARISON ══════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="comparison">
+  <p class="section-label">§ 6 — Head-to-Head</p>
+  <h2>QS vs. GNFS</h2>
+
+  <!-- Complexity Chart -->
+  <div class="complexity-chart">
+    <canvas id="complexity-canvas" height="260"></canvas>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Aspect</th>
+        <th>Quadratic Sieve</th>
+        <th>General Number Field Sieve</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Complexity</td>
+        <td>L[1/2, 1]</td>
+        <td>L[1/3, 1.923]</td>
+      </tr>
+      <tr>
+        <td>Sweet Spot</td>
+        <td>&lt; 100 decimal digits</td>
+        <td>&gt; 100 decimal digits</td>
+      </tr>
+      <tr>
+        <td>Polynomial(s)</td>
+        <td>Single quadratic: Q(x) = (x+m)² − N</td>
+        <td>Two polynomials over ℤ and ℤ[α]</td>
+      </tr>
+      <tr>
+        <td>Sieve Space</td>
+        <td>1D interval around √N</td>
+        <td>2D lattice in (a, b) space</td>
+      </tr>
+      <tr>
+        <td>Value Size Sieved</td>
+        <td>~N^{1/2}</td>
+        <td>~N^{1/d} (d ≈ 5–6 for large N)</td>
+      </tr>
+      <tr>
+        <td>Linear Algebra</td>
+        <td>Gaussian elim. / Lanczos</td>
+        <td>Block Lanczos / Wiedemann (sparse)</td>
+      </tr>
+      <tr>
+        <td>Square Root Step</td>
+        <td>Simple integer arithmetic</td>
+        <td>Complex algebraic number theory</td>
+      </tr>
+      <tr>
+        <td>Implementation Difficulty</td>
+        <td>Moderate</td>
+        <td>Extremely complex</td>
+      </tr>
+      <tr>
+        <td>Largest Factored</td>
+        <td>~130 digits (MPQS)</td>
+        <td>829 bits / 250 digits (RSA-250, 2020)</td>
+      </tr>
+      <tr>
+        <td>Parallelism</td>
+        <td>Embarrassingly parallel (sieve)</td>
+        <td>Highly parallel (lattice sieve); distributed LA</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══ APPLICATIONS ════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="applications">
+  <p class="section-label">§ 7 — Impact & Applications</p>
+  <h2>Real-World Significance</h2>
+
+  <h3>RSA and PKI Security</h3>
+  <p>The GNFS complexity function directly determines the recommended RSA key sizes. NIST currently recommends 2048-bit minimum (617 digits), with 3072-bit for long-term security. Factoring RSA-2048 is estimated to require ~10^{22} MIPS-years — beyond any foreseeable classical computer.</p>
+
+  <h3>Historic Factorizations via GNFS</h3>
+  <div class="callout blue">
+    <p class="callout-title">Record Timeline</p>
+    <p>RSA-129 (1994, QS) → RSA-512 (1999) → RSA-640 (2005) → RSA-768 (2009) → RSA-795 (2019) → RSA-250 (2020, 829 bits, GNFS). Each advance required massive coordinated computation.</p>
+  </div>
+
+  <h3>The Quantum Threat</h3>
+  <p>Shor's algorithm on a sufficiently large quantum computer would factor N in polynomial time O((log N)³), rendering both QS and GNFS obsolete — and breaking RSA entirely. This is why NIST has standardized post-quantum cryptographic algorithms (CRYSTALS-Kyber, CRYSTALS-Dilithium) as replacements for RSA in quantum-capable environments.</p>
+
+  <h3>Other Applications</h3>
+  <p>Beyond breaking RSA, sieve algorithms have driven advances in computational number theory: discrete logarithm computation (Number Field Sieve variant), primality testing cross-checks, and factoring-related problems in algebraic geometry. The lattice sieve techniques developed for GNFS have influenced lattice-based cryptography — ironically, one of the post-quantum candidates.</p>
+
+  <div class="callout">
+    <p class="callout-title">Further Reading</p>
+    <p>Pomerance (1996) — "A Tale of Two Sieves" (accessible survey). Lenstra & Lenstra (1993) — "The Development of the Number Field Sieve." Crandall & Pomerance — "Prime Numbers: A Computational Perspective." Kleinjung et al. (2010) — RSA-768 factorization paper.</p>
+  </div>
+</section>
+
+<footer>
+  <p>QUADRATIC SIEVE &amp; GNFS — INTERACTIVE WALKTHROUGH</p>
+  <p style="margin-top:0.4rem; color: #444460;">Harsh Hemani</p>
+</footer>
+
+<script>
+// ── SCROLL REVEAL ────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── SIEVE VISUALIZATION ──────────────────────────────────────────────────
+const N_VIZ = 899;  // 29 × 31
+const m_viz = Math.floor(Math.sqrt(N_VIZ));  // 29
+const B_VIZ = 20;
+
+function gcd(a, b) { while (b) { [a, b] = [b, a % b]; } return Math.abs(a); }
+
+function Q_val(x) { return (m_viz + x) ** 2 - N_VIZ; }
+
+function factorBase(N, B) {
+  const primes = sievePrimes(B);
+  return primes.filter(p => {
+    if (p === 2) return true;
+    return modPow(N % p, (p - 1) / 2, p) === 1;
+  });
+}
+
+function sievePrimes(limit) {
+  const sieve = new Uint8Array(limit + 1).fill(1);
+  sieve[0] = sieve[1] = 0;
+  for (let i = 2; i * i <= limit; i++) if (sieve[i]) for (let j = i*i; j <= limit; j += i) sieve[j] = 0;
+  return [...sieve].map((v, i) => v ? i : 0).filter(Boolean);
+}
+
+function modPow(base, exp, mod) {
+  let result = 1n;
+  base = BigInt(base); exp = BigInt(exp); mod = BigInt(mod);
+  base %= mod;
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % mod;
+    exp >>= 1n; base = base * base % mod;
+  }
+  return Number(result);
+}
+
+function isSmooth(n, base) {
+  let v = Math.abs(n);
+  for (const p of base) { while (v % p === 0) v = v / p; }
+  return v === 1;
+}
+
+const fb_viz = factorBase(N_VIZ, B_VIZ);
+const sieveLen = 36;
+const cells = [];
+let selectedPrime = null;
+
+function initSieve() {
+  const grid = document.getElementById('sieve-grid');
+  const controls = document.getElementById('sieve-controls');
+
+  for (let x = 0; x < sieveLen; x++) {
+    const qv = Q_val(x);
+    const smooth = isSmooth(qv, fb_viz);
+    const cell = document.createElement('div');
+    cell.className = 'sieve-cell' + (smooth ? ' smooth' : '');
+    cell.title = `x=${x}\nQ(x)=${qv}\n${smooth ? 'B-SMOOTH' : 'not smooth'}`;
+    cell.textContent = qv > 999 ? '···' : qv;
+    grid.appendChild(cell);
+    cells.push({ el: cell, qv, smooth, x });
+  }
+
+  const allBtn = document.createElement('button');
+  allBtn.textContent = 'CLEAR';
+  allBtn.className = 'active';
+  allBtn.onclick = () => {
+    selectedPrime = null;
+    document.querySelectorAll('#sieve-controls button').forEach(b => b.classList.remove('active'));
+    allBtn.classList.add('active');
+    updateSieve();
+  };
+  controls.appendChild(allBtn);
+
+  fb_viz.forEach(p => {
+    const btn = document.createElement('button');
+    btn.textContent = `p=${p}`;
+    btn.onclick = () => {
+      selectedPrime = p;
+      document.querySelectorAll('#sieve-controls button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateSieve();
+    };
+    controls.appendChild(btn);
+  });
+}
+
+function updateSieve() {
+  cells.forEach(({ el, qv, smooth }) => {
+    el.classList.toggle('smooth', smooth);
+    el.classList.remove('selected');
+    if (selectedPrime && Math.abs(qv) % selectedPrime === 0) {
+      el.classList.add('selected');
+    }
+  });
+}
+
+initSieve();
+
+// ── DEMO (Trial Division + Fermat + mini-QS) ─────────────────────────────
+const semiPrimes = [35,77,143,323,667,899,1073,1763,2021,3127,5183,10403,15347,25117,46349,99371,1299827,9999991];
+
+function setRandom() {
+  const sp = semiPrimes[Math.floor(Math.random() * semiPrimes.length)];
+  document.getElementById('demo-input').value = sp;
+}
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0 || n % 3 === 0) return false;
+  for (let i = 5; i * i <= n; i += 6) if (n % i === 0 || n % (i+2) === 0) return false;
+  return true;
+}
+
+function runDemo() {
+  const N = parseInt(document.getElementById('demo-input').value);
+  const out = document.getElementById('demo-output');
+  const log = (html) => { out.innerHTML += html + '\n'; };
+
+  out.innerHTML = '';
+
+  if (isNaN(N) || N < 4) { out.innerHTML = '<span class="error">Please enter an integer ≥ 4.</span>'; return; }
+  if (isPrime(N)) { out.innerHTML = `<span class="error">N = ${N} is prime — nothing to factor.</span>`; return; }
+
+  log(`<span class="step-line">─────────────────────────────────────────</span>`);
+  log(`<span class="highlight">N = ${N}</span>`);
+  log(`<span class="step-line">─────────────────────────────────────────</span>`);
+
+  // Small factor check
+  const smallPrimes = sievePrimes(1000);
+  for (const p of smallPrimes) {
+    if (p * p > N) break;
+    if (N % p === 0) {
+      log(`<span class="step-line">// Trial division</span>`);
+      log(`${N} ÷ ${p} = ${N/p}   <span class="success">✓ FACTOR FOUND!</span>`);
+      log(`\n<span class="success">Result: ${N} = ${p} × ${N/p}</span>`);
+      return;
+    }
+  }
+
+  // QS-inspired: find smooth Q(x) values
+  const m = Math.floor(Math.sqrt(N));
+  log(`\n<span class="step-line">// Step 1: m = ⌊√${N}⌋ = ${m}</span>`);
+  log(`<span class="step-line">// Q(x) = (${m} + x)² − ${N}</span>\n`);
+
+  const B = Math.max(20, Math.ceil(Math.exp(0.5 * Math.sqrt(Math.log(N) * Math.log(Math.log(N))))));
+  const fb = factorBase(N, B);
+  log(`<span class="step-line">// Step 2: Factor base B=${B} → {${fb.slice(0,8).join(', ')}${fb.length>8?', …':''}}</span>\n`);
+
+  const smooths = [];
+  log(`<span class="step-line">// Step 3: Sieving for B-smooth Q(x) values...</span>`);
+
+  for (let x = 0; x < 5000 && smooths.length < fb.length + 5; x++) {
+    const qv = (m + x) * (m + x) - N;
+    if (qv <= 0) continue;
+    if (isSmooth(qv, fb)) {
+      // Factor it
+      let rem = qv;
+      const exps = new Array(fb.length).fill(0);
+      for (let i = 0; i < fb.length; i++) {
+        while (rem % fb[i] === 0) { exps[i]++; rem = rem / fb[i]; }
+      }
+      smooths.push({ x, qv, exps, mx: m + x });
+      if (smooths.length <= 4) {
+        const factored = fb.map((p, i) => exps[i] > 0 ? `${p}^${exps[i]}` : null).filter(Boolean).join('·');
+        log(`  x=${x}: Q(${x}) = ${qv} = ${factored}`);
+      }
+    }
+  }
+
+  if (smooths.length < 2) { log(`<span class="error">Not enough smooth values found. Try a larger N.</span>`); return; }
+  if (smooths.length > 4) log(`  ... (${smooths.length} smooth values found total)`);
+
+  log(`\n<span class="step-line">// Step 4: Linear algebra over GF(2)...</span>`);
+
+  // Find a dependency: look for pairs or single values with all-even exponents
+  let factor = null;
+
+  // Try single smooth values (perfect squares)
+  for (const s of smooths) {
+    if (s.exps.every(e => e % 2 === 0)) {
+      const y = Math.sqrt(s.qv);
+      if (Number.isInteger(y)) {
+        const x_val = s.mx;
+        log(`  Perfect square: Q(${s.x}) = ${s.qv} = ${y}²`);
+        log(`  x = ${x_val}, y = ${y}`);
+        const g1 = gcd(x_val - y, N);
+        const g2 = gcd(x_val + y, N);
+        if (g1 > 1 && g1 < N) { factor = g1; break; }
+        if (g2 > 1 && g2 < N) { factor = g2; break; }
+      }
+    }
+  }
+
+  // Try pairs
+  if (!factor) {
+    outer: for (let i = 0; i < smooths.length; i++) {
+      for (let j = i + 1; j < smooths.length; j++) {
+        const combined = smooths[i].exps.map((e, k) => (e + smooths[j].exps[k]) % 2);
+        if (combined.every(e => e === 0)) {
+          const x_val = smooths[i].mx * smooths[j].mx % N;
+          const yExpsFull = smooths[i].exps.map((e, k) => (e + smooths[j].exps[k]) / 2);
+          let y_val = 1;
+          for (let k = 0; k < fb.length; k++) {
+            for (let t = 0; t < yExpsFull[k]; t++) y_val *= fb[k];
+          }
+          y_val = y_val % N;
+          log(`  Dependency: Q(${smooths[i].x}) × Q(${smooths[j].x})`);
+          log(`  x = ${x_val} (mod N), y = ${y_val} (mod N)`);
+          const g1 = gcd(Math.abs(x_val - y_val), N);
+          const g2 = gcd(x_val + y_val, N);
+          if (g1 > 1 && g1 < N) { factor = g1; break outer; }
+          if (g2 > 1 && g2 < N) { factor = g2; break outer; }
+        }
+      }
+    }
+  }
+
+  log(`\n<span class="step-line">// Step 5: GCD computation...</span>`);
+
+  if (factor) {
+    log(`\n<span class="success">✓ FACTOR FOUND!</span>`);
+    log(`<span class="success">${N} = ${factor} × ${N / factor}</span>`);
+    if (isPrime(factor) && isPrime(N/factor)) {
+      log(`<span class="step-line">(both factors are prime)</span>`);
+    }
+  } else {
+    log(`<span class="error">This demo found smooth values but couldn't resolve a dependency.</span>`);
+    log(`<span class="step-line">Try N = ${semiPrimes[Math.floor(Math.random()*semiPrimes.length)]}</span>`);
+  }
+}
+
+// ── COMPLEXITY CHART ─────────────────────────────────────────────────────
+function drawComplexity() {
+  const canvas = document.getElementById('complexity-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 48;
+  const H = 260;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { l: 60, r: 20, t: 20, b: 45 };
+  const cw = W - PAD.l - PAD.r;
+  const ch = H - PAD.t - PAD.b;
+
+  // L-notation evaluation
+  const Lval = (alpha, c, logN) => Math.exp(c * Math.pow(logN, alpha) * Math.pow(Math.log(logN), 1 - alpha));
+
+  const logNRange = [10, 700];
+  const points = (alpha, c) => {
+    const pts = [];
+    for (let lnN = logNRange[0]; lnN <= logNRange[1]; lnN += 5) {
+      pts.push({ x: lnN, y: Math.log(Lval(alpha, c, lnN)) });
+    }
+    return pts;
+  };
+
+  const qs_pts = points(0.5, 1.0);
+  const gnfs_pts = points(1/3, 1.923);
+
+  const allY = [...qs_pts, ...gnfs_pts].map(p => p.y).filter(v => isFinite(v));
+  const yMin = 0, yMax = Math.min(200, Math.max(...allY));
+
+  const toX = lnN => PAD.l + ((lnN - logNRange[0]) / (logNRange[1] - logNRange[0])) * cw;
+  const toY = y => PAD.t + ch - ((Math.min(y, yMax) - yMin) / (yMax - yMin)) * ch;
+
+  // Grid
+  ctx.strokeStyle = '#2a2a40'; ctx.lineWidth = 1;
+  for (let g = 0; g <= 5; g++) {
+    const y = PAD.t + (g / 5) * ch;
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cw, y); ctx.stroke();
+  }
+
+  // QS curve
+  ctx.beginPath(); ctx.strokeStyle = '#f0c040'; ctx.lineWidth = 2.5;
+  qs_pts.forEach((p, i) => {
+    const px = toX(p.x), py = toY(p.y);
+    if (!isFinite(py)) return;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  // GNFS curve
+  ctx.beginPath(); ctx.strokeStyle = '#40c0f0'; ctx.lineWidth = 2.5;
+  gnfs_pts.forEach((p, i) => {
+    const px = toX(p.x), py = toY(p.y);
+    if (!isFinite(py)) return;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  // Labels
+  ctx.font = '11px IBM Plex Mono';
+  ctx.fillStyle = '#f0c040';
+  ctx.fillText('QS  L[½, 1]', PAD.l + 10, PAD.t + 20);
+  ctx.fillStyle = '#40c0f0';
+  ctx.fillText('GNFS  L[⅓, 1.923]', PAD.l + 10, PAD.t + 36);
+
+  // X axis ticks
+  ctx.fillStyle = '#7878a0'; ctx.font = '10px IBM Plex Mono';
+  [100, 200, 400, 600].forEach(lnN => {
+    ctx.fillText(`ln(N)=${lnN}`, toX(lnN) - 26, H - 10);
+  });
+
+  ctx.fillStyle = '#7878a0';
+  ctx.fillText('← log(Runtime) →', PAD.l, PAD.t + ch / 2);
+
+  // Crossover annotation
+  const crossX = 320;
+  ctx.strokeStyle = '#444460'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(toX(crossX), PAD.t); ctx.lineTo(toX(crossX), PAD.t + ch); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#7878a0'; ctx.font = '10px IBM Plex Mono';
+  ctx.fillText('~100 digits', toX(crossX) - 28, PAD.t + 12);
+}
+
+window.addEventListener('load', () => { setTimeout(drawComplexity, 300); });
+window.addEventListener('resize', drawComplexity);
+</script>
+</body>
+</html>
