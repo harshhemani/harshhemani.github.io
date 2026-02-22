@@ -609,6 +609,16 @@ x² ≡ y²  (mod N)
     we can multiply some of them such that the product is a perfect square. 
     If we are able to do that, we have found the two numbers whose squares are congruent modulo N.
   </p>
+
+  <p>
+    Another trick is to use only small primes upto some bound B.
+    Also, we further restrict ourselves to primes which are square number modulo N.
+    Because these are the only prime numbers which will factor our Q(x).
+    To see why, let us assume p divides Q(x). So, Q(x) ≡ 0 (mod p).
+    But Q(x) = (m + x)² − N.
+    So, (m + x)² − N ≡ 0 (mod p).
+    Hence, (m + x)² ≡ N (mod p).
+  </p>
   
 </section>
 
@@ -622,35 +632,65 @@ x² ≡ y²  (mod N)
       <div class="step-num">01</div>
       <div class="step-body">
         <h4>Choose a Factor Base</h4>
-        <p>Select a smoothness bound B and collect all primes p ≤ B for which N is a quadratic residue mod p (i.e., the Legendre symbol (N/p) = 1). These are the only primes that can divide Q(x).</p>
+        <p>
+          Select a smoothness bound B and collect all primes p ≤ B for which N is a quadratic residue mod p (i.e., the Legendre symbol (N/p) = 1). 
+          These are the only primes that can divide Q(x).
+        </p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
       <div class="step-body">
-        <h4>Sieve for B-smooth Values</h4>
-        <p>For each prime p in the factor base, find the values of x where p | Q(x) — there are exactly two residues mod p. Then "sieve" by subtracting log(p) from positions x, x+p, x+2p, … Positions with near-zero accumulated value are smooth candidates.</p>
+        <h4>Prepare the Sieve Array</h4>
+        <p>
+          Create an array where each index i represents an x value. 
+          Compute Q(x)=(x+m)2−N for each index, and store its logarithm (log(Q(x)) in the array. 
+          This value represents the "total weight" we need to chip away at.
+        </p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
       <div class="step-body">
-        <h4>Factor Smooth Values Completely</h4>
-        <p>Trial-divide the smooth candidates by the factor base to obtain their full factorization. Record each as a vector over GF(2) of prime exponent parities. We need slightly more than |factor base| such vectors.</p>
+        <h4>Sieve for B-smooth Values</h4>
+        <p>
+          For each prime p in the factor base, find the values of x where p exactly divides Q(x).
+          There are exactly two such values. 
+          Then "sieve" by subtracting log(p) from positions x, x+p, x+2p, … 
+          Positions with near-zero accumulated value are smooth candidates.
+        </p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">04</div>
       <div class="step-body">
-        <h4>Gaussian Elimination over GF(2)</h4>
-        <p>Find a subset of the smooth values whose product has all even exponents — i.e., a linear dependency in GF(2). This gives a relation x² ≡ y² (mod N).</p>
+        <h4>Factor Smooth Values Completely</h4>
+        <p>
+          Trial-divide the smooth candidates by the factor base to obtain their full factorization. 
+          Record each as a vector over GF(2) of prime exponent parities. 
+          That is, create binary vectors of prime exponents (0 for even, 1 for odd).
+          We need slightly more than number of primes selected initially such vectors.
+        </p>
       </div>
     </div>
     <div class="step">
       <div class="step-num">05</div>
       <div class="step-body">
+        <h4>Gaussian Elimination over GF(2)</h4>
+        <p>
+          Find a subset of the smooth values whose product has all even exponents — i.e., a linear dependency in GF(2). 
+          This gives a relation x² ≡ y² (mod N).
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">06</div>
+      <div class="step-body">
         <h4>Compute the GCD</h4>
-        <p>With x and y in hand, compute gcd(x − y, N) and gcd(x + y, N). With high probability (≥ 50% per relation), one of these is a non-trivial factor of N.</p>
+        <p>
+          With x and y in hand, compute gcd(x − y, N) and gcd(x + y, N). 
+          With high probability (≥ 50% per relation), one of these is a non-trivial factor of N.
+        </p>
       </div>
     </div>
   </div>
