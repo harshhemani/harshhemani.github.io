@@ -577,26 +577,39 @@ x² ≡ y²  (mod N)
   <p class="section-label">§ 1 — Quadratic Sieve</p>
   <h2>The Quadratic Sieve</h2>
   <p>Invented by Carl Pomerance in 1981, the Quadratic Sieve was the world's fastest factoring algorithm for large numbers until GNFS surpassed it in the early 1990s. It remains the fastest algorithm for numbers up to ~100 decimal digits and is elegant in its simplicity.</p>
-
-  <div class="callout blue">
-    <p class="callout-title">Complexity</p>
-    <p>L<sub>N</sub>[1/2, 1] = exp((1+o(1)) √(ln N · ln ln N)) — sub-exponential, but super-polynomial.</p>
-  </div>
-
+  
+  <p>
+    Fermat's method looks for perfect squares x² - y² = N which is hard.
+    Quadratic seive looks for two numbers whose squares are congruent modulo N.
+    It attempts to search for such numbers by using a specialized generator, the central polynomial Q(x), for candidate numbers.
+  </p>
+  
   <h3>The Central Polynomial</h3>
-  <p>QS evaluates the polynomial <strong>Q(x) = (x + ⌊√N⌋)² − N</strong>. Because x is near √N, Q(x) is much smaller than N, making its values easier to factor. Crucially, Q(x) ≡ (x + ⌊√N⌋)² (mod N), so any factorization of Q(x) gives us a perfect square mod N.</p>
+  <p>
+    QS evaluates the polynomial <strong>Q(x) = (x + ⌊√N⌋)² − N</strong>. 
+    We choose candidate x values to be small (x = 1, 2, ...) so that Q(x) evaluates to values which are easier to factor.
+    The reason for such a choice for Q(x) is that it is already congruent to a square number.
+    Q(x) ≡ (x + ⌊√N⌋)² (mod N).
+    So any factorization of Q(x) gives us a perfect square mod N.
+  </p>
 
-  <div class="math-block">m = ⌊√N⌋
-Q(x) = (m + x)² − N
-
-<span class="comment">// Q(x) is automatically ≡ (m+x)² (mod N)</span>
-<span class="comment">// So Q(x) smooth ⟹ (m+x)² = smooth product (mod N)</span>
-
-<span class="comment">// Example: N = 15347</span>
-m = ⌊√15347⌋ = 123
-Q(1) = 124² − 15347 = 15376 − 15347 = 29     <span class="comment">← smooth? 29 is prime ✓</span>
-Q(2) = 125² − 15347 = 15625 − 15347 = 278    <span class="comment">← 2 × 139</span>
-Q(5) = 128² − 15347 = 16384 − 15347 = 1037   <span class="comment">← 17 × 61</span></div>
+  <div class="math-block">
+    m = ⌊√N⌋
+    Q(x) = (m + x)² − N
+    <span class="comment">// Q(x) is automatically ≡ (m+x)² (mod N)</span>
+    <span class="comment">// So Q(x) smooth ⟹ (m+x)² ≡ smooth product (mod N)</span>
+    <span class="comment">// Example: N = 15347</span>
+    m = ⌊√15347⌋ = 123
+    Q(1) = 124² − 15347 = 15376 − 15347 = 29     <span class="comment">← smooth? 29 is prime ✓</span>
+    Q(2) = 125² − 15347 = 15625 − 15347 = 278    <span class="comment">← 2 × 139</span>
+    Q(5) = 128² − 15347 = 16384 − 15347 = 1037   <span class="comment">← 17 × 61</span>
+  </div>
+  <p>
+    Q(x) might not be a perfect square, but once we have collected sufficient number of Q(x) values,
+    we can multiply some of them such that the product is a perfect square. 
+    If we are able to do that, we have found the two numbers whose squares are congruent modulo N.
+  </p>
+  
 </section>
 
 <!-- ══ QS STEPS ════════════════════════════════════════════════════════════ -->
@@ -672,6 +685,11 @@ Q(5) = 128² − 15347 = 16384 − 15347 = 1037   <span class="comment">← 17 �
     <div class="demo-output" id="demo-output">Enter a number and click FACTOR →</div>
   </div>
 </section>
+
+<div class="callout blue">
+  <p class="callout-title">Complexity</p>
+  <p>L<sub>N</sub>[1/2, 1] = exp((1+o(1)) √(ln N · ln ln N)) — sub-exponential, but super-polynomial.</p>
+</div>
 
 <!-- ══ GNFS INTRO ══════════════════════════════════════════════════════════ -->
 <section class="section reveal" id="gnfs-intro">
