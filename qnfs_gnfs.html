@@ -548,7 +548,12 @@
     <p class="callout-title">Core Idea</p>
     <p>Both algorithms are <em>congruence of squares</em> methods. If we can find integers <em>x</em> and <em>y</em> such that x² ≡ y² (mod N) but x ≢ ±y (mod N), then gcd(x − y, N) reveals a non-trivial factor of N.</p>
   </div>
-
+<p>
+  In simple terms, if you can represent a number N as the difference of two perfect squares, you have automatically found its factors.
+  Finding two perfect squares that subtract exactly to N is actually quite hard for very large numbers. The "Congruence of Squares" is a shortcut. 
+  Instead of looking for an exact equality, we look for a congruence.
+</p>
+  
   <div class="math-block"><span class="comment">// Fermat's factorization identity</span>
 N = a² − b²  =  (a + b)(a − b)
 
@@ -557,7 +562,13 @@ x² ≡ y²  (mod N)
 ⟹  N | (x² − y²) = (x−y)(x+y)
 ⟹  gcd(x−y, N)  is likely a factor of N</div>
 
-  <p>The challenge is <em>finding</em> such x and y efficiently. Both sieve algorithms solve this by searching for many numbers whose squares are <strong>smooth</strong> (have only small prime factors), then combining them via linear algebra.</p>
+  <p>
+    That is, we look for x and y such that when x² and y² are divided by N, they leave the same remainder.
+    It is quite easy to see that if x² = pN + R and y² = qN + R, then x² - y² divides N. 
+    We say that gcd(x-y, N) is likely a factor of N because often we get 1 or N as the GCD. 
+  </p>
+  <p>The challenge is then <em>finding</em> such x and y efficiently. 
+    Both sieve algorithms solve this by searching for many numbers whose squares are <strong>smooth</strong> (have only small prime factors), then combining them via linear algebra.</p>
 </section>
 
 <!-- ══ QS INTRO ═══════════════════════════════════════════════════════════ -->
