@@ -612,12 +612,13 @@ x² ≡ y²  (mod N)
 
   <p>
     Another trick is to use only small primes upto some bound B.
-    Also, we further restrict ourselves to primes which are square number modulo N.
+    Also, we further restrict ourselves to primes, for which N is congruent to a perfect square.
     Because these are the only prime numbers which will factor our Q(x).
     To see why, let us assume p divides Q(x). So, Q(x) ≡ 0 (mod p).
     But Q(x) = (m + x)² − N.
     So, (m + x)² − N ≡ 0 (mod p).
     Hence, (m + x)² ≡ N (mod p).
+    Another way to say this is, pow(N, (p - 1) // 2, p) == 1 or Legendre symbol (N/p) = 1.
   </p>
   
 </section>
@@ -644,7 +645,7 @@ x² ≡ y²  (mod N)
         <h4>Prepare the Sieve Array</h4>
         <p>
           Create an array where each index i represents an x value. 
-          Compute Q(x)=(x+m)2−N for each index, and store its logarithm (log(Q(x)) in the array. 
+          Compute Q(x)=(x+m)²−N for each index, and store its logarithm (log(Q(x)) in the array. 
           This value represents the "total weight" we need to chip away at.
         </p>
       </div>
